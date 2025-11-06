@@ -1,12 +1,16 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "./context/LanguageContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
 export default function Home() {
   const [show, setShow] = useState(false);
+  const [username, setUsername] = useState("");
   const [pass, setPass] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
   const { lang } = useLanguage();
 
   const t = {
@@ -18,6 +22,7 @@ export default function Home() {
       passPh: "Введите ваш пароль...",
       info: "Создавайте, редактируйте и просматривайте школьное расписание онлайн.",
       btn: "Войти",
+      err: "Неверный логин или пароль",
     },
     kz: {
       title: "Павлодар қ. №10 гимназиясының\nСабақ кестесін құру",
@@ -27,7 +32,25 @@ export default function Home() {
       passPh: "Құпия сөзді енгізіңіз...",
       info: "Мектеп кестесін онлайн жасаңыз, түзетіңіз және қараңыз.",
       btn: "Кіру",
+      err: "Қате логин немесе құпия сөз",
     },
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password: pass }),
+    });
+
+    if (res.ok) {
+      router.push("/dashboard");
+    } else {
+      setError(t[lang].err);
+    }
   };
 
   return (
@@ -42,12 +65,14 @@ export default function Home() {
             {t[lang].title}
           </h2>
 
-          <form className="flex flex-col gap-10" onSubmit={(e) => e.preventDefault()}>
+          <form className="flex flex-col gap-10" onSubmit={handleLogin}>
             <div className="text-left">
               <label className="block mb-1">{t[lang].login}</label>
               <input
                 type="text"
                 placeholder={t[lang].loginPh}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full border rounded-lg p-3 outline-none"
               />
             </div>
@@ -68,17 +93,19 @@ export default function Home() {
               >
                 <img
                   src={show ? "/lasteye.svg" : "/eye-hide-svgrepo-com.svg"}
-                  alt="icon"
+                  alt="eye"
                   className="w-6"
                 />
               </button>
             </div>
 
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+
             <p className="text-sm text-gray-500">{t[lang].info}</p>
 
             <button
               type="submit"
-              className="bg-[#0a1c3a] text-white rounded-full py-3 mt-2 hover:bg-blue-900 transition"
+              className="bg-[#0d254c] text-white rounded-full py-3 mt-2 hover:bg-blue-900 transition"
             >
               {t[lang].btn}
             </button>
