@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 export default function ScheduleView() {
   const [schedule, setSchedule] = useState({});
@@ -77,81 +79,77 @@ export default function ScheduleView() {
   if (loading) return <div>Загрузка расписания...</div>;
 
   return (
-    <div className="p-4 space-y-8">
-      <button
-        onClick={generateSchedule}
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-        disabled={generating}
-      >
-        {generating ? "Генерация..." : "Сгенерировать расписание"}
-      </button>
+    <>
+      <Header />
 
-      {Object.values(schedule)
-        .filter((cls) => {
-          const match = cls.class_name.match(/^(\d+)/);
-          if (!match) return false;
-          const grade = parseInt(match[1], 10);
-          return grade >= 5 && grade <= 11;
-        })
-        .sort((a, b) => {
-          const numA = parseInt(a.class_name);
-          const numB = parseInt(b.class_name);
-          return numA - numB;
-        })
-        .map((cls) => {
-          const maxLessons = Math.max(...Object.values(cls.days).map((day) => day.length));
+      <main className="pt-5 p-4 space-y-8 bg-gray-100 min-h-screen">
+        <button
+          onClick={generateSchedule}
+          className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          disabled={generating}
+        >
+          {generating ? "Генерация..." : "Сгенерировать расписание"}
+        </button>
 
-          return (
-            <div key={cls.class_name} className="border p-4 rounded shadow">
-              <h2 className="text-2xl font-bold mb-4">{cls.class_name}</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr>
-                      <th className="border border-gray-300 p-2">#</th>
-                      {days.map((day) => (
-                        <th key={day} className="border border-gray-300 p-2">
-                          {day}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Array.from({ length: maxLessons }).map((_, i) => (
-                      <tr key={i}>
-                        <td className="border border-gray-300 p-2 text-center">{i + 1}</td>
-                        {days.map((day) => {
-                          const lessons = cls.days[day]?.filter((l) => l.lesson_num === i + 1) || [];
+        {Object.values(schedule)
+          .filter((cls) => {
+            const match = cls.class_name.match(/^(\d+)/);
+            if (!match) return false;
+            const grade = parseInt(match[1], 10);
+            return grade >= 5 && grade <= 11;
+          })
+          .sort((a, b) => {
+            const numA = parseInt(a.class_name);
+            const numB = parseInt(b.class_name);
+            return numA - numB;
+          })
+          .map((cls) => {
+            const maxLessons = Math.max(...Object.values(cls.days).map((day) => day.length));
 
-                          if (!lessons.length)
+            return (
+              <div key={cls.class_name} className="border p-4 rounded shadow bg-white">
+                <h2 className="text-2xl font-bold mb-4">{cls.class_name}</h2>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr>
+                        <th className="border border-gray-300 p-2">#</th>
+                        {days.map((day) => (
+                          <th key={day} className="border border-gray-300 p-2">
+                            {day}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.from({ length: maxLessons }).map((_, i) => (
+                        <tr key={i}>
+                          <td className="border border-gray-300 p-2 text-center">{i + 1}</td>
+                          {days.map((day) => {
+                            const lessons = cls.days[day]?.filter((l) => l.lesson_num === i + 1) || [];
+
+                            if (!lessons.length)
+                              return (
+                                <td
+                                  key={day}
+                                  className="border border-gray-300 p-2 text-center text-gray-400"
+                                >
+                                  —
+                                </td>
+                              );
+
                             return (
-                              <td
-                                key={day}
-                                className="border border-gray-300 p-2 text-center text-gray-400"
-                              >
-                                —
-                              </td>
-                            );
-
-                          return (
-                            <td key={day} className="border border-gray-300 p-2">
-                              {lessons.map((lesson, idx) => {
-                                const isSpecial = specialSubjects.includes(lesson.subject);
-                                const bgColor = isSpecial ? "bg-white" : "bg-white";
-
-                                return (
+                              <td key={day} className="border border-gray-300 p-2">
+                                {lessons.map((lesson, idx) => (
                                   <div
                                     key={idx}
-                                    className={`mb-2 p-2 rounded ${bgColor} border border-gray-200`}
+                                    className={`mb-2 p-2 rounded border border-gray-200 bg-white`}
                                   >
                                     <div className="font-semibold">
                                       {lesson.subject}
-                                      {lesson.group
-                                        ? ` (группа ${lesson.group})`
-                                        : ""}
+                                      {lesson.group ? ` (группа ${lesson.group})` : ""}
                                     </div>
 
-                                    {/* Выпадающий список учителей */}
                                     <select
                                       className="w-full border rounded p-1 text-sm mt-1"
                                       value={lesson.teacher_id || ""}
@@ -172,24 +170,24 @@ export default function ScheduleView() {
                                       ))}
                                     </select>
 
-                                    {/* Кабинет */}
                                     <div className="text-sm text-gray-600 mt-1 italic">
                                       Кабинет: {lesson.room || "Не назначен"}
                                     </div>
                                   </div>
-                                );
-                              })}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                                ))}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          );
-        })}
-    </div>
+            );
+          })}
+      </main>
+      <Footer />
+    </>
   );
 }
